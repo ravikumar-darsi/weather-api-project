@@ -1,4 +1,4 @@
-package com.skyapi.weatherforecast;
+package com.skyapi.weatherforecast.location;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
@@ -25,9 +25,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyapi.weatherforecast.common.Location;
-import com.skyapi.weatherforecast.location.LocationApiController;
-import com.skyapi.weatherforecast.location.LocationNotFoundException;
-import com.skyapi.weatherforecast.location.LocationService;
 
 @SuppressWarnings("removal")
 @WebMvcTest(LocationApiController.class)
