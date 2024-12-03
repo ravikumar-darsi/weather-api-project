@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
@@ -144,7 +145,6 @@ public class Location {
 	public void setRealtimeWeather(RealtimeWeather realtimeWeather) {
 		this.realtimeWeather = realtimeWeather;
 	}
-	
 	
 	
 
