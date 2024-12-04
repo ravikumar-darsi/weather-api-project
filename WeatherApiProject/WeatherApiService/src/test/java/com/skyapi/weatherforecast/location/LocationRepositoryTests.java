@@ -22,82 +22,82 @@ public class LocationRepositoryTests {
 
 	@Autowired
 	private LocationRepository repository;
-
+	
 	@Test
 	public void testAddSuccess() {
 		Location location = new Location();
 		location.setCode("NYC_USA");
-		location.setCityName("New York");
+		location.setCityName("New York City");
 		location.setRegionName("New York");
 		location.setCountryCode("US");
 		location.setCountryName("United States of America");
 		location.setEnabled(true);
-
+		
 		Location savedLocation = repository.save(location);
-
+		
 		assertThat(savedLocation).isNotNull();
 		assertThat(savedLocation.getCode()).isEqualTo("NYC_USA");
 	}
-
+	
 	@Test
 	public void testListSuccess() {
 		List<Location> locations = repository.findUntrashed();
-
+		
 		assertThat(locations).isNotEmpty();
-
+		
 		locations.forEach(System.out::println);
 	}
-
+	
 	@Test
 	public void testGetNotFound() {
 		String code = "ABCD";
 		Location location = repository.findByCode(code);
-
+		
 		assertThat(location).isNull();
 	}
-
+	
 	@Test
 	public void testGetFound() {
 		String code = "LACA_USA";
 		Location location = repository.findByCode(code);
-
+		
 		assertThat(location).isNotNull();
 		assertThat(location.getCode()).isEqualTo(code);
-	}
-
+	}	
+	
 	@Test
 	public void testTrashSuccess() {
 		String code = "LACA_USA";
 		repository.trashByCode(code);
-
+		
 		Location location = repository.findByCode(code);
-
+		
 		assertThat(location).isNull();
 	}
-
+	
 	@Test
 	public void testAddRealtimeWeatherData() {
-		String code = "DELHI_IN";
-
+		String code = "NYC_USA";
+		
 		Location location = repository.findByCode(code);
-
+		
 		RealtimeWeather realtimeWeather = location.getRealtimeWeather();
-
+		
 		if (realtimeWeather == null) {
 			realtimeWeather = new RealtimeWeather();
 			realtimeWeather.setLocation(location);
 			location.setRealtimeWeather(realtimeWeather);
 		}
-
-		realtimeWeather.setTemperature(10);
-		realtimeWeather.setHumidity(50);
-		realtimeWeather.setPrecipitation(20);
-		realtimeWeather.setStatus("Cloudy");
+		
+		realtimeWeather.setTemperature(-1);
+		realtimeWeather.setHumidity(30);
+		realtimeWeather.setPrecipitation(40);
+		realtimeWeather.setStatus("Snowy");
 		realtimeWeather.setWindSpeed(15);
 		realtimeWeather.setLastUpdated(new Date());
-
+		
 		Location updatedLocation = repository.save(location);
-
+		
 		assertThat(updatedLocation.getRealtimeWeather().getLocationCode()).isEqualTo(code);
 	}
 }
