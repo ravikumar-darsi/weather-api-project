@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @Entity
 @Table(name = "locations")
 public class Location {
@@ -51,13 +52,24 @@ public class Location {
 	private String countryCode;
 
 	private boolean enabled;
-	
+
 	@JsonIgnore
 	private boolean trashed;
-	
+
 	@OneToOne(mappedBy = "location", cascade = CascadeType.ALL)
 	@PrimaryKeyJoinColumn
+	@JsonIgnore
 	private RealtimeWeather realtimeWeather;
+
+	public Location() {
+	}
+	public Location(String cityName, String regionName, String countryName, String countryCode) {
+		super();
+		this.cityName = cityName;
+		this.regionName = regionName;
+		this.countryName = countryName;
+		this.countryCode = countryCode;
+	}
 
 	public String getCode() {
 		return code;
@@ -134,8 +146,7 @@ public class Location {
 
 	@Override
 	public String toString() {
-		return "Location [code=" + code + ", cityName=" + cityName + ", regionName=" + regionName + ", countryName="
-				+ countryName + ", countryCode=" + countryCode + ", enabled=" + enabled + ", trashed=" + trashed + "]";
+		return cityName + ", " + (regionName != null ? regionName : "") + ", " + countryName;
 	}
 
 	public RealtimeWeather getRealtimeWeather() {
@@ -145,7 +156,5 @@ public class Location {
 	public void setRealtimeWeather(RealtimeWeather realtimeWeather) {
 		this.realtimeWeather = realtimeWeather;
 	}
-	
-	
 
 }
