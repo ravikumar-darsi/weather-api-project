@@ -79,7 +79,7 @@ public class RealtimeWeatherRepositoryTests {
 	
 	@Test
 	public void testFindByLocationFound() {
-		String loccationCode = "DELHI_In";
+		String loccationCode = "DELHI_IN";
 		
 		RealtimeWeather realtimeWeather = repo.findByLocationCode(loccationCode);
 		assertThat(realtimeWeather).isNotNull();
