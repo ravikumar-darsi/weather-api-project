@@ -41,7 +41,7 @@ public class HourlyWeatherApiController {
 
 			List<HourlyWeather> hourlyForecast = hourlyWeatherService.getByLocation(locationFromIP, currentHour);
 
-			if (hourlyForecast == null) {
+			if (hourlyForecast == null || hourlyForecast.isEmpty()) {
 				return ResponseEntity.noContent().build();
 			}
 			return ResponseEntity.ok(hourlyForecast);
