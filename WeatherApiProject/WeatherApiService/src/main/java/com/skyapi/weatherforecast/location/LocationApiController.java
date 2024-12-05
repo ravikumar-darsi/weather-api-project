@@ -2,7 +2,9 @@ package com.skyapi.weatherforecast.location;
 
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,12 +24,15 @@ import jakarta.validation.Valid;
 public class LocationApiController {
 
 	private LocationService service;
-
-	public LocationApiController(LocationService service) {
+	private ModelMapper modelMapper;
+	
+	
+	public LocationApiController(LocationService service, ModelMapper modelMapper) {
 		super();
 		this.service = service;
+		this.modelMapper = modelMapper;
 	}
-	
+
 	@PostMapping
 	public ResponseEntity<Location> addLocation(@RequestBody @Valid Location location) {
 		Location addedLocation = service.add(location);
@@ -44,7 +49,7 @@ public class LocationApiController {
 			return ResponseEntity.noContent().build();
 		}
 		
-		return ResponseEntity.ok(locations);
+		return ResponseEntity.ok(listEntity2ListDTO(locations));
 		
 	}
 
@@ -60,11 +65,11 @@ public class LocationApiController {
 	}
 	
 	@PutMapping
-	public ResponseEntity<?> updateLocation(@RequestBody @Valid Location location) {
+	public ResponseEntity<?> updateLocation(@RequestBody @Valid LocationDTO dto) {
 		try {
-			Location updatedLocation = service.update(location);
+			Location updatedLocation = service.update(dto2Entity(dto));
 			
-			return ResponseEntity.ok(updatedLocation);
+			return ResponseEntity.ok(entity2DTO(updatedLocation));
 		} catch (LocationNotFoundException e) {
 			return ResponseEntity.notFound().build();
 		}
@@ -80,4 +85,19 @@ public class LocationApiController {
 			return ResponseEntity.notFound().build();
 		}
 	}	
+	
+	
+	private List<LocationDTO> listEntity2ListDTO(List<Location> listEntity){
+		
+		return listEntity.stream().map(entity -> entity2DTO(entity))
+						.collect(Collectors.toList());
+	}
+	
+	private LocationDTO entity2DTO(Location entity) {
+		return modelMapper.map(entity, LocationDTO.class);
+	}
+	
+	private Location dto2Entity(LocationDTO dto) {
+		return modelMapper.map(dto, Location.class);
+	}
 }
