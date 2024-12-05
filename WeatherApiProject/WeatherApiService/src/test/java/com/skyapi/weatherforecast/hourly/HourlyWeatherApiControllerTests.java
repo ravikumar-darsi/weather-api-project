@@ -1,15 +1,18 @@
 package com.skyapi.weatherforecast.hourly;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.skyapi.weatherforecast.GeoLocationException;
 import com.skyapi.weatherforecast.GeolocationService;
 
 @SuppressWarnings("removal")
@@ -28,4 +31,15 @@ public class HourlyWeatherApiControllerTests {
 			.andExpect(status().isBadRequest())
 			.andDo(print());
 	}
+	
+	@Test
+	public void testGetByIpShouldReturn400BadRequestBecauseGeoLocationException() throws Exception {
+		
+		Mockito.when(locationService.getLocation(Mockito.anyString())).thenThrow(GeoLocationException.class);
+		
+		mockMvc.perform(get(END_POINT_PATH).header("X-Current-Hour", "9"))
+			.andExpect(status().isBadRequest())
+			.andDo(print());
+	}
+	
 }
