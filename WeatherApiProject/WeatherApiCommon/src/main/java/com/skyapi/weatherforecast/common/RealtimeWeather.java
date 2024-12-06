@@ -40,7 +40,7 @@ public class RealtimeWeather {
 	private int windSpeed;
 	
 	@Column(length = 50)
-	@NotBlank(message = "Status must be empty")
+	@NotBlank(message = "Status must not be empty")
 	@Length(min= 3, max = 50, message = "Status must be in between 3-50 characters")
 	private String status;
 	
