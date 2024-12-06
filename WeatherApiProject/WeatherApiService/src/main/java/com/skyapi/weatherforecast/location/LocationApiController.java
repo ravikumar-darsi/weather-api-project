@@ -25,8 +25,7 @@ public class LocationApiController {
 
 	private LocationService service;
 	private ModelMapper modelMapper;
-	
-	
+
 	public LocationApiController(LocationService service, ModelMapper modelMapper) {
 		super();
 		this.service = service;
@@ -34,69 +33,60 @@ public class LocationApiController {
 	}
 
 	@PostMapping
-	public ResponseEntity<Location> addLocation(@RequestBody @Valid Location location) {
-		Location addedLocation = service.add(location);
+	public ResponseEntity<LocationDTO> addLocation(@RequestBody @Valid LocationDTO dto) {
+		Location addedLocation = service.add(dto2Entity(dto));
 		URI uri = URI.create("/v1/locations/" + addedLocation.getCode());
-		
-		return ResponseEntity.created(uri).body(addedLocation);
+
+		return ResponseEntity.created(uri).body(entity2DTO(addedLocation));
 	}
-	
+
 	@GetMapping
 	public ResponseEntity<?> listLocations() {
 		List<Location> locations = service.list();
-		
+
 		if (locations.isEmpty()) {
 			return ResponseEntity.noContent().build();
 		}
-		
+
 		return ResponseEntity.ok(listEntity2ListDTO(locations));
-		
+
 	}
 
 	@GetMapping("/{code}")
 	public ResponseEntity<?> getLocation(@PathVariable("code") String code) {
 		Location location = service.get(code);
-		
-		if (location == null) {
-			return ResponseEntity.notFound().build();
-		}
-		
-		return ResponseEntity.ok(location);
+
+		return ResponseEntity.ok(entity2DTO(location));
 	}
-	
+
 	@PutMapping
 	public ResponseEntity<?> updateLocation(@RequestBody @Valid LocationDTO dto) {
-		try {
-			Location updatedLocation = service.update(dto2Entity(dto));
-			
-			return ResponseEntity.ok(entity2DTO(updatedLocation));
-		} catch (LocationNotFoundException e) {
-			return ResponseEntity.notFound().build();
-		}
+
+		Location updatedLocation = service.update(dto2Entity(dto));
+
+		return ResponseEntity.ok(entity2DTO(updatedLocation));
+
 	}
-	
+
 	@DeleteMapping("/{code}")
 	public ResponseEntity<?> deleteLocation(@PathVariable("code") String code) {
-		try {
+	
 			service.delete(code);
-			
+
 			return ResponseEntity.noContent().build();
-		} catch (LocationNotFoundException e) {
-			return ResponseEntity.notFound().build();
-		}
-	}	
-	
-	
-	private List<LocationDTO> listEntity2ListDTO(List<Location> listEntity){
-		
-		return listEntity.stream().map(entity -> entity2DTO(entity))
-						.collect(Collectors.toList());
+	 
 	}
-	
+
+	private List<LocationDTO> listEntity2ListDTO(List<Location> listEntity) {
+
+		return listEntity.stream().map(entity -> entity2DTO(entity)).collect(Collectors.toList());
+
+	}
+
 	private LocationDTO entity2DTO(Location entity) {
 		return modelMapper.map(entity, LocationDTO.class);
 	}
-	
+
 	private Location dto2Entity(LocationDTO dto) {
 		return modelMapper.map(dto, Location.class);
 	}
