@@ -12,6 +12,7 @@ import rest.client.examples.hourly.HourlyForecastDTO;
 
 public class GetHourlyWeatherByCodeAsObject {
 
+	@SuppressWarnings("null")
 	public static void main(String[] args) {
 		String requestURI = "http://localhost:8080/v1/hourly/{code}";
 		String locationCode = "DELHI_IN";
