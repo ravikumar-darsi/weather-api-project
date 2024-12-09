@@ -101,6 +101,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return error;
 	}
 	
+	@SuppressWarnings("null")
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
