@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToOne;
 @Embeddable
 public class DailyWeatherId implements Serializable {
 
-  private int datOfMonth;
+  private int dayOfMonth;
   private int month;
 
   @ManyToOne
@@ -21,18 +21,18 @@ public class DailyWeatherId implements Serializable {
     
   }
 
-  public DailyWeatherId(int datOfMonth, int month, Location location) {
-    this.datOfMonth = datOfMonth;
+  public DailyWeatherId(int dayOfMonth, int month, Location location) {
+    this.dayOfMonth = dayOfMonth;
     this.month = month;
     this.location = location;
   }
 
-  public int getDatOfMonth() {
-    return datOfMonth;
+  public int getDayOfMonth() {
+    return dayOfMonth;
   }
 
-  public void setDatOfMonth(int datOfMonth) {
-    this.datOfMonth = datOfMonth;
+  public void setDayOfMonth(int dayOfMonth) {
+    this.dayOfMonth = dayOfMonth;
   }
 
   public int getMonth() {
