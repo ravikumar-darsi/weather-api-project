@@ -9,16 +9,17 @@ import rest.client.examples.location.Location;
 
 public class ListLocationAsObjectArray {
 
+	@SuppressWarnings("null")
 	public static void main(String[] args) {
-
 		String requestURI = "http://localhost:8080/v1/locations";
-
+		
 		RestTemplate restTemplate = new RestTemplate();
+		
 		try {
 			Location[] locations = restTemplate.getForObject(requestURI, Location[].class);
 			
-			if(locations != null & locations.length > 0) {
-				for(Location location : locations) {
+			if (locations != null & locations.length > 0) {
+				for (Location location : locations) {
 					System.out.println(location);
 				}
 			}
