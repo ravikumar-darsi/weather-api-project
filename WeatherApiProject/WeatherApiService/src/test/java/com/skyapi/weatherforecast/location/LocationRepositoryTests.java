@@ -157,13 +157,13 @@ public class LocationRepositoryTests {
 		List<DailyWeather> listDailyWeather = location.getListDailyWeather();
 		
 		DailyWeather forecast1 = new DailyWeather()
-						.location(location)
-						.dayOfMonth(16)
-						.month(7)
-						.minTemp(25)
-						.maxTemp(33)
-						.precipitation(20)
-						.status("Sunny");
+				.location(location)
+				.dayOfMonth(16)
+				.month(7)
+				.minTemp(25)
+				.maxTemp(33)
+				.precipitation(20)
+				.status("Sunny");
 		
 		DailyWeather forecast2 = new DailyWeather()
 				.location(location)
@@ -172,7 +172,7 @@ public class LocationRepositoryTests {
 				.minTemp(26)
 				.maxTemp(34)
 				.precipitation(10)
-				.status("Clear");
+				.status("Clear");	
 		
 		listDailyWeather.add(forecast1);
 		listDailyWeather.add(forecast2);
@@ -181,4 +181,5 @@ public class LocationRepositoryTests {
 		
 		assertThat(updatedLocation.getListDailyWeather()).isNotEmpty();
 	}
+	
 }
