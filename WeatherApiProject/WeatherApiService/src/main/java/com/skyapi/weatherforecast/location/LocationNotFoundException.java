@@ -8,6 +8,6 @@ public class LocationNotFoundException extends RuntimeException {
 	}
 
 	public LocationNotFoundException(String countryCode, String cityName) {
-		super("No location found with the given country code: " + countryCode + "and city name:" + cityName);
+		super("No location found with the given country code: " + countryCode + " and city name:" + cityName);
 	}
 }
