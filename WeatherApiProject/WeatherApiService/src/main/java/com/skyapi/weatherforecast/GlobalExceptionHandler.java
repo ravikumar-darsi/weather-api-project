@@ -44,8 +44,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		
 		return error;
 	}
-
-	@ExceptionHandler(BadRequestException.class)
+	
+	@ExceptionHandler({BadRequestException.class, GeoLocationException.class})
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ResponseBody
 	public ErrorDTO handleBadRequestException(HttpServletRequest request, Exception ex) {
@@ -59,7 +59,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		LOGGER.error(ex.getMessage(), ex);
 		
 		return error;
-	}
+	}	
 	
 	@ExceptionHandler(LocationNotFoundException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
@@ -75,8 +75,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		LOGGER.error(ex.getMessage(), ex);
 		
 		return error;
-	}
-	
+	}		
 	
 	@ExceptionHandler(ConstraintViolationException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -99,8 +98,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		LOGGER.error(ex.getMessage(), ex);
 		
 		return error;
-	}
-	
+	}	
+
 	@SuppressWarnings("null")
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
