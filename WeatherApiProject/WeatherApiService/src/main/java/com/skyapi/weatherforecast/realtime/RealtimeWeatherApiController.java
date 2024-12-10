@@ -40,7 +40,7 @@ public class RealtimeWeatherApiController {
 
 	@GetMapping
 	public ResponseEntity<?> getRealtimWeatherByIPAdddress(HttpServletRequest request) {
-		String ipAddress = CommonUtility.getIpAddress(request);
+		String ipAddress = CommonUtility.getIPAddress(request);
 
 		try {
 			Location locationFromIP = locationService.getLocation(ipAddress);
@@ -71,15 +71,13 @@ public class RealtimeWeatherApiController {
 
 	@PutMapping("/{locationCode}")
 	public ResponseEntity<?> updateRealtimeWeatherByLocationCode(@PathVariable("locationCode") String locationCode,
-			@RequestBody @Valid RealtimeWeather realtimeWeatherInRequest) {
+			@RequestBody @Valid RealtimeWeatherDTO dto) {
 		
-			realtimeWeatherInRequest.setLocationCode(locationCode);
+		RealtimeWeather realtimeWeather = dto2Entity(dto);
+		realtimeWeather.setLocationCode(locationCode);
 
 			RealtimeWeather updatedRealtimeWeather = realtimeWeatherService.update(locationCode,
-					realtimeWeatherInRequest);
-
-			// RealtimeWeatherDTO dto = modelMapper.map(updatedRealtimeWeather,
-			// RealtimeWeatherDTO.class);
+					realtimeWeather);
 
 			return ResponseEntity.ok(entity2DTO(updatedRealtimeWeather));
 
@@ -88,6 +86,10 @@ public class RealtimeWeatherApiController {
 	private RealtimeWeatherDTO entity2DTO(RealtimeWeather realtimeWeather) {
 		return modelMapper.map(realtimeWeather, RealtimeWeatherDTO.class);
 
+	}
+	
+	private RealtimeWeather dto2Entity(RealtimeWeatherDTO dto) {
+		return modelMapper.map(dto, RealtimeWeather.class);
 	}
 
 }
