@@ -45,7 +45,7 @@ public class HourlyWeatherApiController {
 
 	@GetMapping
 	public ResponseEntity<?> listHourlyForecastsByIPAddress(HttpServletRequest request) {
-		String ipAddress = CommonUtility.getIpAddress(request);
+		String ipAddress = CommonUtility.getIPAddress(request);
 
 		try {
 			int currentHour = Integer.parseInt(request.getHeader("X-Current-Hour"));
