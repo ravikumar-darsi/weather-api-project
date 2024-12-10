@@ -31,7 +31,7 @@ public class IP2LocationsTests {
 		IP2Location ipLocator= new IP2Location();
 		ipLocator.Open(DBPath);
 		
-		String ipAddress = "108.30.178.78";
+		String ipAddress = "108.30.178.78"; //NEW YORK
 		IPResult ipResult = ipLocator.IPQuery(ipAddress);
 		
 		assertThat(ipResult.getStatus()).isEqualTo("OK");
@@ -45,7 +45,7 @@ public class IP2LocationsTests {
 		IP2Location ipLocator= new IP2Location();
 		ipLocator.Open(DBPath);
 		
-		String ipAddress = "103.48.198.141";
+		String ipAddress = "103.48.198.141"; //DELHI
 		IPResult ipResult = ipLocator.IPQuery(ipAddress);
 		
 		assertThat(ipResult.getStatus()).isEqualTo("OK");
