@@ -1,13 +1,20 @@
 package com.skyapi.weatherforecast.full;
 
+import java.util.Date;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
+import com.skyapi.weatherforecast.AbstractLocationService;
+import com.skyapi.weatherforecast.common.DailyWeather;
+import com.skyapi.weatherforecast.common.HourlyWeather;
 import com.skyapi.weatherforecast.common.Location;
+import com.skyapi.weatherforecast.common.RealtimeWeather;
 import com.skyapi.weatherforecast.location.LocationNotFoundException;
 import com.skyapi.weatherforecast.location.LocationRepository;
 
 @Service
-public class FullWeatherService {
+public class FullWeatherService  extends AbstractLocationService {
 
 	private LocationRepository repo;
 
@@ -29,12 +36,47 @@ public class FullWeatherService {
 		return locationInDB;
 	}
 	
-	public Location get(String locationCode) {
-		Location location = repo.findByCode(locationCode);
+//	public Location get(String locationCode) {
+//		Location location = repo.findByCode(locationCode);
+//		
+//		if(location == null) {
+//			throw new LocationNotFoundException(locationCode);
+//		}
+//		return location;
+//	}
+	
+	public Location update(String locationCode, Location locationInRequest) {
+		Location locationInDB = repo.findByCode(locationCode);
 		
-		if(location == null) {
+		if (locationInDB == null) {
 			throw new LocationNotFoundException(locationCode);
 		}
-		return location;
+		
+		setLocationForWeatherData(locationInRequest, locationInDB);
+		
+		saveRealtimeWeatherIfNotExistBefore(locationInRequest, locationInDB);
+		
+		locationInRequest.copyAllFieldsFrom(locationInDB);
+		
+		return repo.save(locationInRequest);
+	}
+
+	private void saveRealtimeWeatherIfNotExistBefore(Location locationInRequest, Location locationInDB) {
+		if (locationInDB.getRealtimeWeather() == null) {
+			locationInDB.setRealtimeWeather(locationInRequest.getRealtimeWeather());
+			repo.save(locationInDB);
+		}
+	}
+
+	private void setLocationForWeatherData(Location locationInRequest, Location locationInDB) {
+		RealtimeWeather realtimeWeather = locationInRequest.getRealtimeWeather();
+		realtimeWeather.setLocation(locationInDB);
+		realtimeWeather.setLastUpdated(new Date());
+		
+		List<DailyWeather> listDailyWeather = locationInRequest.getListDailyWeather();
+		listDailyWeather.forEach(dw -> dw.getId().setLocation(locationInDB));
+		
+		List<HourlyWeather> listHourlyWeather = locationInRequest.getListHourlyWeather();
+		listHourlyWeather.forEach(hw -> hw.getId().setLocation(locationInDB));
 	}
 }
