@@ -10,6 +10,8 @@ import com.skyapi.weatherforecast.daily.DailyWeatherDTO;
 import com.skyapi.weatherforecast.hourly.HourlyWeatherDTO;
 import com.skyapi.weatherforecast.realtime.RealtimeWeatherDTO;
 
+import jakarta.validation.Valid;
+
 @JsonPropertyOrder({"location", "temperature", "humidity", "precipitation", "wind_speed", "status", "last_updated"})
 public class FullWeatherDTO {
 
@@ -17,12 +19,15 @@ public class FullWeatherDTO {
 	
 	@JsonProperty("realtime_weather")
 	@JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = RealtimeWeatherFieldFilter.class)
+	@Valid
 	private RealtimeWeatherDTO realtimeWeather  = new RealtimeWeatherDTO();
 	
 	@JsonProperty("hourly_forecast")
+	@Valid
 	private List<HourlyWeatherDTO> listHourlyWeather = new ArrayList<>();
 	
 	@JsonProperty("daily_forecast")
+	@Valid
 	private List<DailyWeatherDTO> listDailyWeather = new ArrayList<>();
 
 	public String getLocation() {
