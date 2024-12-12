@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,13 +38,15 @@ import com.skyapi.weatherforecast.realtime.RealtimeWeatherDTO;
 public class FullWeatherApiControllerTests {
 
 	private static final String END_POINT_PATH = "/v1/full";
+	private static final String RESPONSE_CONTENT_TYPE = "application/hal+json";
+	private static final String REQUEST_CONTENT_TYPE = "application/json";	
 	
 	@Autowired private MockMvc mockMvc;	
 	@Autowired private ObjectMapper objectMapper;
 	
 	@MockBean private FullWeatherService  weatherService;
-	
 	@MockBean private GeolocationService locationService;
+	@SpyBean private FullWeatherModelAssembler modelAssembler;
 	
 	@Test
 	public void testGetByIPShouldReturn400BadRequestBecauseGeolocationException() throws Exception {
@@ -80,7 +83,6 @@ public class FullWeatherApiControllerTests {
 		location.setCountryCode("US");
 		location.setCountryName("United States of America");
 		
-
 		RealtimeWeather realtimeWeather = new RealtimeWeather();
 		realtimeWeather.setTemperature(12);
 		realtimeWeather.setHumidity(32);
@@ -88,7 +90,7 @@ public class FullWeatherApiControllerTests {
 		realtimeWeather.setPrecipitation(88);
 		realtimeWeather.setStatus("Cloudy");
 		realtimeWeather.setWindSpeed(5);
-
+		
 		location.setRealtimeWeather(realtimeWeather);
 		
 		DailyWeather dailyForecast1 = new DailyWeather()
@@ -110,23 +112,23 @@ public class FullWeatherApiControllerTests {
 				.status("Sunny");		
 		
 		location.setListDailyWeather(List.of(dailyForecast1, dailyForecast2));
-		 
-		HourlyWeather hourlyForecast1 = new HourlyWeather()
-				  .location(location)
-				  .hourOfDay(10)
-				  .temperature(13)
-				  .precipitation(70)
-				  .status("Cloudy");
-
-		 HourlyWeather hourlyForecast2 = new HourlyWeather()
-				  .location(location)
-				  .hourOfDay(11)
-				  .temperature(15)
-				  .precipitation(0)
-				  .status("Sunny");
 		
-		 location.setListHourlyWeather(List.of(hourlyForecast1, hourlyForecast2));
-		 
+		HourlyWeather hourlyForecast1 = new HourlyWeather()
+				.location(location)
+				.hourOfDay(10)
+				.temperature(13)
+				.precipitation(70)
+				.status("Cloudy");		
+		
+		HourlyWeather hourlyForecast2 = new HourlyWeather()
+				.location(location)
+				.hourOfDay(11)
+				.temperature(15)
+				.precipitation(60)
+				.status("Sunny");		
+		
+		location.setListHourlyWeather(List.of(hourlyForecast1, hourlyForecast2));
+		
 		Mockito.when(locationService.getLocation(Mockito.anyString())).thenReturn(location);
 		when(weatherService.getByLocation(location)).thenReturn(location);
 		
@@ -134,13 +136,12 @@ public class FullWeatherApiControllerTests {
 		
 		mockMvc.perform(get(END_POINT_PATH))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType("application/json"))
+				.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
 				.andExpect(jsonPath("$.location", is(expectedLocation)))
 				.andExpect(jsonPath("$.realtime_weather.temperature", is(12)))
 				.andExpect(jsonPath("$.hourly_forecast[0].hour_of_day", is(10)))
 				.andExpect(jsonPath("$.daily_forecast[0].precipitation", is(40)))
-
-
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/full")))
 				.andDo(print());
 	}
 	
@@ -158,6 +159,7 @@ public class FullWeatherApiControllerTests {
 				.andDo(print());		
 	}
 	
+
 	@Test
 	public void testGetByCodeShouldReturn200OK() throws Exception {
 		String locationCode = "NYC_USA";
@@ -222,11 +224,12 @@ public class FullWeatherApiControllerTests {
 		
 		mockMvc.perform(get(requestURI))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType("application/json"))
+				.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
 				.andExpect(jsonPath("$.location", is(expectedLocation)))
 				.andExpect(jsonPath("$.realtime_weather.temperature", is(12)))
 				.andExpect(jsonPath("$.hourly_forecast[0].hour_of_day", is(10)))
 				.andExpect(jsonPath("$.daily_forecast[0].precipitation", is(40)))
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/full/" + locationCode)))
 				.andDo(print());
 	}
 	
@@ -239,7 +242,7 @@ public class FullWeatherApiControllerTests {
 		
 		String requestBody = objectMapper.writeValueAsString(fullWeatherDTO);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", is("Hourly weather data cannot be empty")))
 				.andDo(print());
@@ -262,7 +265,7 @@ public class FullWeatherApiControllerTests {
 		
 		String requestBody = objectMapper.writeValueAsString(fullWeatherDTO);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", is("Daily weather data cannot be empty")))
 				.andDo(print());
@@ -305,7 +308,7 @@ public class FullWeatherApiControllerTests {
 		
 		String requestBody = objectMapper.writeValueAsString(fullWeatherDTO);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", containsString("Temperature must be in the range")))
 				.andDo(print());
@@ -348,7 +351,7 @@ public class FullWeatherApiControllerTests {
 		
 		String requestBody = objectMapper.writeValueAsString(fullWeatherDTO);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", containsString("Hour of day must be in between")))
 				.andDo(print());
@@ -391,7 +394,7 @@ public class FullWeatherApiControllerTests {
 		
 		String requestBody = objectMapper.writeValueAsString(fullWeatherDTO);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", containsString("Status must be in between")))
 				.andDo(print());
@@ -440,7 +443,7 @@ public class FullWeatherApiControllerTests {
 		LocationNotFoundException ex = new LocationNotFoundException(locationCode);
 		when(weatherService.update(Mockito.eq(locationCode), Mockito.any())).thenThrow(ex);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.errors[0]", is(ex.getMessage())))
 				.andDo(print());
@@ -523,11 +526,13 @@ public class FullWeatherApiControllerTests {
 		
 		when(weatherService.update(Mockito.eq(locationCode), Mockito.any())).thenReturn(location);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 				.andExpect(status().isOk())
+				.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
 				.andExpect(jsonPath("$.realtime_weather.temperature", is(12)))
 				.andExpect(jsonPath("$.hourly_forecast[0].hour_of_day", is(10)))
-				.andExpect(jsonPath("$.daily_forecast[0].precipitation", is(40)))				
+				.andExpect(jsonPath("$.daily_forecast[0].precipitation", is(40)))
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/full/" + locationCode)))
 				.andDo(print());
 	}
 
