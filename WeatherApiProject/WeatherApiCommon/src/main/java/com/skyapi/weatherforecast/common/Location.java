@@ -58,6 +58,11 @@ public class Location {
 		this.countryName = countryName;
 		this.countryCode = countryCode;
 	}
+	
+	public Location(String code, String cityName, String regionName, String countryName, String countryCode) {
+		this(cityName, regionName, countryName, countryCode);
+		this.code = code;
+	}
 
 	public String getCode() {
 		return code;
