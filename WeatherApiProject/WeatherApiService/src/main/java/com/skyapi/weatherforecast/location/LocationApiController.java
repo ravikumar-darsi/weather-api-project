@@ -90,4 +90,6 @@ public class LocationApiController {
 	private Location dto2Entity(LocationDTO dto) {
 		return modelMapper.map(dto, Location.class);
 	}
+	
+
 }
