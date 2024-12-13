@@ -31,7 +31,7 @@ public class MainController {
 		String locationByCodeUrl = linkTo(methodOn(LocationApiController.class).getLocation(null)).toString();
 		entity.setLocationByCodeUrl(locationByCodeUrl);
 		
-		String realtimeWeatherByIpUrl = linkTo(methodOn(RealtimeWeatherApiController.class).getRealtimWeatherByIPAdddress(null)).toString();
+		String realtimeWeatherByIpUrl = linkTo(methodOn(RealtimeWeatherApiController.class).getRealtimeWeatherByIPAddress(null)).toString();
 		entity.setRealtimeWeatherByIpUrl(realtimeWeatherByIpUrl);
 		
 		String realtimeWeatherByCodeUrl = linkTo(
@@ -39,7 +39,7 @@ public class MainController {
 		entity.setRealtimeWeatherByCodeUrl(realtimeWeatherByCodeUrl);	
 		
 		String hourlyForecastByIpUrl = linkTo(
-				methodOn(HourlyWeatherApiController.class).listHourlyForecastsByIPAddress(null)).toString();
+				methodOn(HourlyWeatherApiController.class).listHourlyForecastByIPAddress(null)).toString();
 		entity.setHourlyForecastByIpUrl(hourlyForecastByIpUrl);
 		
 		String hourlyForecastByCodeUrl = linkTo(
