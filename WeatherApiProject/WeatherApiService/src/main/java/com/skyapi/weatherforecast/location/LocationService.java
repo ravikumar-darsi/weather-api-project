@@ -2,6 +2,10 @@ package com.skyapi.weatherforecast.location;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,35 +27,43 @@ public class LocationService extends AbstractLocationService {
 		return repo.save(location);
 	}
 
-	public List<Location> list() {
+	@Deprecated
+	List<Location> list() {
 		return repo.findUntrashed();
 	}
 
-	public Location get(String code)  {
-		 Location location = repo.findByCode(code);
-		 
-		 if (location == null) {
-				throw new LocationNotFoundException(code);
+	public Page<Location> listByPage(int pageNum, int pageSize, String sortField) {
+		Sort sort = Sort.by(sortField).ascending();
+		Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
 
-		 }
-		 return location;
+		return repo.findUntrashed(pageable);
+	}
+
+	public Location get(String code) {
+		Location location = repo.findByCode(code);
+
+		if (location == null) {
+			throw new LocationNotFoundException(code);
+
+		}
+		return location;
 	}
 
 	public Location update(Location locationInRequest) {
 		String code = locationInRequest.getCode();
-		
+
 		Location locationInDB = repo.findByCode(code);
-		
+
 		if (locationInDB == null) {
 			throw new LocationNotFoundException(code);
 		}
-		
+
 		locationInDB.copyFieldsFrom(locationInRequest);
-		
+
 		return repo.save(locationInDB);
 	}
 
-	public void delete(String code){
+	public void delete(String code) {
 		Location location = repo.findByCode(code);
 
 		if (location == null) {
@@ -60,4 +72,6 @@ public class LocationService extends AbstractLocationService {
 
 		repo.trashByCode(code);
 	}
+	
+	
 }

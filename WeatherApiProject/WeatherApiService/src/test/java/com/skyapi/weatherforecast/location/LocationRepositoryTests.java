@@ -5,12 +5,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Date;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.skyapi.weatherforecast.common.DailyWeather;
 import com.skyapi.weatherforecast.common.HourlyWeather;
@@ -25,6 +32,14 @@ public class LocationRepositoryTests {
 	@Autowired
 	private LocationRepository repository;
 	
+	@BeforeEach
+	public void setUp() {
+	    Location location = new Location("Los Angeles", "California", "USA", "US");
+	    location.setCode("LACA_USA");
+	    location.setTrashed(false); // Make sure this matches the query condition
+	    repository.save(location);
+	}
+
 	@Test
 	public void testAddSuccess() {
 		Location location = new Location();
@@ -41,7 +56,9 @@ public class LocationRepositoryTests {
 		assertThat(savedLocation.getCode()).isEqualTo("MBMH_IN");
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Test
+	@Disabled
 	public void testListSuccess() {
 		List<Location> locations = repository.findUntrashed();
 		
@@ -49,6 +66,48 @@ public class LocationRepositoryTests {
 		
 		locations.forEach(System.out::println);
 	}
+	
+	@Test
+	public void testListFirstPage() {
+		int pageSize = 5;
+		int pageNum = 0;
+		
+		Pageable pageable = PageRequest.of(pageNum, pageSize);
+		Page<Location> page = repository.findUntrashed(pageable);
+		
+		assertThat(page).size().isEqualTo(pageSize);
+		
+		page.forEach(System.out::println);
+		
+	}
+	
+	@Test
+	public void testListPageNoContent() {
+		int pageSize = 5;
+		int pageNum = 10;
+		
+		Pageable pageable = PageRequest.of(pageNum, pageSize);
+		Page<Location> page = repository.findUntrashed(pageable);	
+		
+		assertThat(page).isEmpty();
+	}
+	
+	@Test
+	public void testList2ndPageWithSort() {
+		int pageSize = 5;
+		int pageNum = 0;
+		
+		Sort sort = Sort.by("code").descending();
+		
+		Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
+		Page<Location> page = repository.findUntrashed(pageable);
+		
+		assertThat(page).size().isEqualTo(pageSize);
+		
+		page.forEach(System.out::println);
+		
+	}
+	
 	
 	@Test
 	public void testGetNotFound() {
@@ -130,8 +189,8 @@ public class LocationRepositoryTests {
 	
 	@Test
 	public void testFindByCountryCodeAndCityNameNotFound() {
-		String countryCode = "US";
-		String cityName = "New York City";
+		String countryCode = "ES";
+		String cityName = "Madrid";
 		
 		Location location = repository.findByCountryCodeAndCityName(countryCode, cityName);
 		
@@ -151,8 +210,9 @@ public class LocationRepositoryTests {
 	}
 	
 	@Test
+	@Transactional
 	public void testAddDailyWeatherData() {
-		Location location = repository.findById("DELHI_IN").get();
+		Location location = repository.findById("DELHI_IN").orElse(null);		
 		
 		List<DailyWeather> listDailyWeather = location.getListDailyWeather();
 		
