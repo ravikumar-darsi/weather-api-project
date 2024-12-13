@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,6 +26,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -203,23 +207,189 @@ public class LocationApiControllerTests {
 		location2.setCountryName("United States of America");
 		location2.setEnabled(true);	
 		
-		Page<Location> page = new PageImpl<>(List.of(location1, location2));
+		List<Location> listLocations = List.of(location1, location2);
 		
-		Mockito.when(service.listByPage(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyString()))
+		int pageSize = 5;
+		int pageNum = 1;
+		String sortField = "code";
+		int totalElements = listLocations.size();
+		
+		Sort sort = Sort.by(sortField);
+		Pageable pageable = PageRequest.of(pageNum - 1, pageSize,sort);
+		
+		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
+		
+		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField))
 					.thenReturn(page);
 		
-		mockMvc.perform(get(END_POINT_PATH))
+		String requestURI= END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
+
+		
+		mockMvc.perform(get(requestURI))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType("application/hal+json"))
+				.andExpect(jsonPath("$._embedded.locations[0].code", is("NYC_USA")))
+				.andExpect(jsonPath("$._embedded.locations[0].city_name", is("New York City")))
+				.andExpect(jsonPath("$._embedded.locations[1].code", is("LACA_USA")))
+				.andExpect(jsonPath("$._embedded.locations[1].city_name", is("Los Angeles")))	
+				.andExpect(jsonPath("$.page.size", is(pageSize)))
+				.andExpect(jsonPath("$.page.number", is(pageNum)))
+				.andExpect(jsonPath("$.page.total_elements", is(totalElements)))
+				.andExpect(jsonPath("$.page.total_pages", is(1)))
+				.andDo(print());			
+	}
+	
+	@Test
+	public void testPaginationLinksOnlyOnePage() throws Exception {
+		Location location1 = new Location("NYC_USA", "New York City", "New York", "US", "United States of America");
+		Location location2 = new Location("LACA_USA", "Los Angeles", "California", "US", "United States of America");
+
+		List<Location> listLocations = List.of(location1, location2);
+		
+		int pageSize = 5;
+		int pageNum = 1;
+		String sortField = "code";
+		int totalElements = listLocations.size();
+		
+		Sort sort = Sort.by(sortField);
+		Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+		
+		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
+		
+		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField)).thenReturn(page);
+		
+		String hostName = "http://localhost";
+		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
+		
+		mockMvc.perform(get(requestURI))
 			.andExpect(status().isOk())
-			.andExpect(content().contentType("application/json"))
-			.andExpect(jsonPath("$[0].code", is("NYC_USA")))
-			.andExpect(jsonPath("$[0].city_name", is("New York City")))
-			.andExpect(jsonPath("$[1].code", is("LACA_USA")))
-			.andExpect(jsonPath("$[1].city_name", is("Los Angeles")))			
+			.andExpect(content().contentType("application/hal+json"))
+			.andExpect(jsonPath("$._links.self.href", is(hostName + requestURI)))
+			.andExpect(jsonPath("$._links.first").doesNotExist())
+			.andExpect(jsonPath("$._links.next").doesNotExist())
+			.andExpect(jsonPath("$._links.prev").doesNotExist())
+			.andExpect(jsonPath("$._links.last").doesNotExist())
+			.andDo(print());			
+	}		
+	
+	@Test
+	public void testPaginationLinksInFirstPage() throws Exception {
+		int totalElements = 18;
+		int pageSize = 5;
+		
+		List<Location> listLocations = new ArrayList<>(pageSize);
+		
+		for (int i = 1; i <= pageSize; i++) {
+			listLocations.add(new Location("CODE_" + i, "City " + i, "Region Name", "US", "Country Name"));
+		}
+		
+		int pageNum = 1;
+		int totalPages = totalElements / pageSize + 1;
+		String sortField = "code";
+		
+		Sort sort = Sort.by(sortField);
+		Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+		
+		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
+		
+		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField)).thenReturn(page);
+		
+		String hostName = "http://localhost";
+		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
+		
+		String nextPageURI = END_POINT_PATH + "?page=" + (pageNum + 1) + "&size=" + pageSize + "&sort=" + sortField;
+		String lastPageURI = END_POINT_PATH + "?page=" + totalPages + "&size=" + pageSize + "&sort=" + sortField;
+		
+		mockMvc.perform(get(requestURI))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType("application/hal+json"))
+			.andExpect(jsonPath("$._links.first").doesNotExist())
+			.andExpect(jsonPath("$._links.next.href", is(hostName + nextPageURI)))
+			.andExpect(jsonPath("$._links.prev").doesNotExist())
+			.andExpect(jsonPath("$._links.last.href", is(hostName + lastPageURI)))
+			.andDo(print());			
+	}	
+	
+	@Test
+	public void testPaginationLinksInMiddlePage() throws Exception {
+		int totalElements = 18;
+		int pageSize = 5;
+		
+		List<Location> listLocations = new ArrayList<>(pageSize);
+		
+		for (int i = 1; i <= pageSize; i++) {
+			listLocations.add(new Location("CODE_" + i, "City " + i, "Region Name", "US", "Country Name"));
+		}
+		
+		int pageNum = 3;
+		int totalPages = totalElements / pageSize + 1;
+		String sortField = "code";
+		
+		Sort sort = Sort.by(sortField);
+		Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+		
+		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
+		
+		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField)).thenReturn(page);
+		
+		String hostName = "http://localhost";
+		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
+		
+		String firstPageURI = END_POINT_PATH + "?page=1&size=" + pageSize + "&sort=" + sortField;
+		String nextPageURI = END_POINT_PATH + "?page=" + (pageNum + 1) + "&size=" + pageSize + "&sort=" + sortField;
+		String prevPageURI = END_POINT_PATH + "?page=" + (pageNum - 1) + "&size=" + pageSize + "&sort=" + sortField;
+		String lastPageURI = END_POINT_PATH + "?page=" + totalPages + "&size=" + pageSize + "&sort=" + sortField;
+		
+		mockMvc.perform(get(requestURI))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType("application/hal+json"))
+			.andExpect(jsonPath("$._links.first.href", is(hostName + firstPageURI)))
+			.andExpect(jsonPath("$._links.next.href", is(hostName + nextPageURI)))
+			.andExpect(jsonPath("$._links.prev.href", is(hostName + prevPageURI)))
+			.andExpect(jsonPath("$._links.last.href", is(hostName + lastPageURI)))
+			.andDo(print());			
+	}		
+
+	@Test
+	public void testPaginationLinksInLastPage() throws Exception {
+		int totalElements = 18;
+		int pageSize = 5;
+		
+		List<Location> listLocations = new ArrayList<>(pageSize);
+		
+		for (int i = 1; i <= pageSize; i++) {
+			listLocations.add(new Location("CODE_" + i, "City " + i, "Region Name", "US", "Country Name"));
+		}
+		
+		int totalPages = (totalElements / pageSize) + 1;
+		int pageNum = totalPages;
+		String sortField = "code";
+		
+		Sort sort = Sort.by(sortField);
+		Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+		
+		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
+		
+		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField)).thenReturn(page);
+		
+		String hostName = "http://localhost";
+		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
+		
+		String firstPageURI = END_POINT_PATH + "?page=1&size=" + pageSize + "&sort=" + sortField;
+		String prevPageURI = END_POINT_PATH + "?page=" + (pageNum - 1) + "&size=" + pageSize + "&sort=" + sortField;
+		
+		mockMvc.perform(get(requestURI))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType("application/hal+json"))
+			.andExpect(jsonPath("$._links.first.href", is(hostName + firstPageURI)))
+			.andExpect(jsonPath("$._links.next").doesNotExist())
+			.andExpect(jsonPath("$._links.prev.href", is(hostName + prevPageURI)))
+			.andExpect(jsonPath("$._links.last").doesNotExist())
 			.andDo(print());			
 	}
 	
 	@Test
-	public void testListByPageShouldReturn400BadRequest() throws Exception {
+	public void testListByPageShouldReturn400BadRequestInvalidPageNum() throws Exception {
 		int pageNum = 0;
 		int pageSize = 5;
 		String sortField = "code";
