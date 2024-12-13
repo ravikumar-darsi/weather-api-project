@@ -19,7 +19,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +33,8 @@ import com.skyapi.weatherforecast.location.LocationNotFoundException;
 public class DailyWeatherApiControllerTests {
 
 	private static final String END_POINT_PATH = "/v1/daily";
+	private static final String RESPONSE_CONTENT_TYPE = "application/hal+json";
+	private static final String REQUEST_CONTENT_TYPE = "application/json";
 	
 	@Autowired private MockMvc mockMvc;	
 	@Autowired private ObjectMapper objectMapper;
@@ -51,7 +52,8 @@ public class DailyWeatherApiControllerTests {
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", is(ex.getMessage())))
 				.andDo(print());
-	}		
+	}
+		
 	
 	@Test
 	public void testGetByIPShouldReturn404NotFound() throws Exception {
@@ -114,9 +116,13 @@ public class DailyWeatherApiControllerTests {
 		
 		mockMvc.perform(get(END_POINT_PATH))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType("application/json"))
+				.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
 				.andExpect(jsonPath("$.location", is(expectedLocation)))
 				.andExpect(jsonPath("$.daily_forecast[0].day_of_month", is(16)))
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/daily")))
+				.andExpect(jsonPath("$._links.realtime_weather.href", is("http://localhost/v1/realtime")))
+				.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly")))
+				.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full")))					
 				.andDo(print());
 	}
 	
@@ -182,9 +188,13 @@ public class DailyWeatherApiControllerTests {
 		
 		mockMvc.perform(get(requestURI))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType("application/json"))
+				.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
 				.andExpect(jsonPath("$.location", is(expectedLocation)))
 				.andExpect(jsonPath("$.daily_forecast[0].day_of_month", is(16)))
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/daily/" + locationCode)))
+				.andExpect(jsonPath("$._links.realtime_weather.href", is("http://localhost/v1/realtime/" + locationCode)))
+				.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly/" + locationCode)))
+				.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full/" + locationCode)))					
 				.andDo(print());
 	}
 	
@@ -196,7 +206,7 @@ public class DailyWeatherApiControllerTests {
 		
 		String requestBody = objectMapper.writeValueAsString(listDTO);
 		
-		mockMvc.perform(put(requestURI).contentType(MediaType.APPLICATION_JSON).content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errors[0]", is("Daily forecast data cannot be empty")))
 			.andDo(print());
@@ -226,7 +236,7 @@ public class DailyWeatherApiControllerTests {
 		
 		String requestBody = objectMapper.writeValueAsString(listDTO);
 		
-		mockMvc.perform(put(requestURI).contentType(MediaType.APPLICATION_JSON).content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errors[0]", containsString("Day of month must be between 1-31")))
 			.andDo(print());				
@@ -253,7 +263,7 @@ public class DailyWeatherApiControllerTests {
 		LocationNotFoundException ex = new LocationNotFoundException(locationCode);
 		when(dailyWeatherService.updateByLocationCode(Mockito.eq(locationCode), Mockito.anyList())).thenThrow(ex);
 		
-		mockMvc.perform(put(requestURI).contentType(MediaType.APPLICATION_JSON).content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 			.andExpect(status().isNotFound())
 			.andDo(print());				
 		
@@ -315,10 +325,16 @@ public class DailyWeatherApiControllerTests {
 
 		when(dailyWeatherService.updateByLocationCode(Mockito.eq(locationCode), Mockito.anyList())).thenReturn(dailyForecast);
 		
-		mockMvc.perform(put(requestURI).contentType(MediaType.APPLICATION_JSON).content(requestBody))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.location", is(location.toString())))
+			.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
 			.andExpect(jsonPath("$.daily_forecast[0].day_of_month", is(17)))
+			.andExpect(jsonPath("$.daily_forecast[1].day_of_month", is(18)))
+			.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/daily/" + locationCode)))
+			.andExpect(jsonPath("$._links.realtime_weather.href", is("http://localhost/v1/realtime/" + locationCode)))
+			.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly/" + locationCode)))
+			.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full/" + locationCode)))				
 			.andDo(print());				
 		
 	}
