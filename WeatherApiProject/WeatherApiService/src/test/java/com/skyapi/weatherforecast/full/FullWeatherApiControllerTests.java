@@ -33,6 +33,7 @@ import com.skyapi.weatherforecast.hourly.HourlyWeatherDTO;
 import com.skyapi.weatherforecast.location.LocationNotFoundException;
 import com.skyapi.weatherforecast.realtime.RealtimeWeatherDTO;
 
+@SuppressWarnings("removal")
 @WebMvcTest(FullWeatherApiController.class)
 public class FullWeatherApiControllerTests {
 	private static final String END_POINT_PATH = "/v1/full";

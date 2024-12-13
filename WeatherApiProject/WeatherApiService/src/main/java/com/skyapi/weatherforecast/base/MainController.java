@@ -22,6 +22,7 @@ public class MainController {
 		return ResponseEntity.ok(createRootEntity()) ;
 	}
 
+	@SuppressWarnings("deprecation")
 	private RootEntity createRootEntity() throws GeoLocationException {
 		RootEntity entity = new RootEntity();
 		
