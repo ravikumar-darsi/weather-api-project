@@ -3,9 +3,11 @@ package com.skyapi.weatherforecast.hourly;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.hateoas.RepresentationModel;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class HourlyWeatherListDTO {
+public class HourlyWeatherListDTO extends RepresentationModel<HourlyWeatherListDTO> {
 
 	private String location;
 
