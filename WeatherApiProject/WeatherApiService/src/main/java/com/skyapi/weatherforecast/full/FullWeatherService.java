@@ -36,14 +36,14 @@ public class FullWeatherService  extends AbstractLocationService {
 		return locationInDB;
 	}
 	
-//	public Location get(String locationCode) {
-//		Location location = repo.findByCode(locationCode);
-//		
-//		if(location == null) {
-//			throw new LocationNotFoundException(locationCode);
-//		}
-//		return location;
-//	}
+	public Location get(String locationCode) {
+		Location location = repo.findByCode(locationCode);
+		
+		if(location == null) {
+			throw new LocationNotFoundException(locationCode);
+		}
+		return location;
+	}
 	
 	public Location update(String locationCode, Location locationInRequest) {
 		Location locationInDB = repo.findByCode(locationCode);

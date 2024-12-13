@@ -1,7 +1,10 @@
 package com.skyapi.weatherforecast.full;
 
-import com.skyapi.weatherforecast.BadRequestException;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import org.modelmapper.ModelMapper;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.skyapi.weatherforecast.BadRequestException;
 import com.skyapi.weatherforecast.CommonUtility;
 import com.skyapi.weatherforecast.GeoLocationException;
 import com.skyapi.weatherforecast.GeolocationService;
@@ -26,13 +30,15 @@ public class FullWeatherApiController {
 	private GeolocationService locationService;
 	private FullWeatherService weatherService;
 	private ModelMapper modelMapper;
-
+	private FullWeatherModelAssembler modelAssembler;
+	
 	public FullWeatherApiController(GeolocationService locationService, FullWeatherService weatherService,
-			ModelMapper modelMapper) {
+			ModelMapper modelMapper, FullWeatherModelAssembler modelAssembler) {
 		super();
 		this.locationService = locationService;
 		this.weatherService = weatherService;
 		this.modelMapper = modelMapper;
+		this.modelAssembler = modelAssembler;
 	}
 
 	@GetMapping
@@ -43,7 +49,9 @@ public class FullWeatherApiController {
 
 		Location locationInDB = weatherService.getByLocation(locationFromIP);
 
-		return ResponseEntity.ok(entity2DTO(locationInDB));
+		FullWeatherDTO dto = entity2DTO(locationInDB);
+		
+		return ResponseEntity.ok(modelAssembler.toModel(dto));
 	}
 	
 	@GetMapping("/{locationCode}")
@@ -51,7 +59,9 @@ public class FullWeatherApiController {
 		
 		Location locationInDB = weatherService.get(locationCode);
 		
-		return ResponseEntity.ok(entity2DTO(locationInDB));
+		FullWeatherDTO dto = entity2DTO(locationInDB);
+		
+		return ResponseEntity.ok(addLinksByLocation(dto, locationCode));
 	}
 
 	@PutMapping("/{locationCode}")
@@ -68,7 +78,9 @@ public class FullWeatherApiController {
 		
 		Location updatedLocation = weatherService.update(locationCode, locationInRequest);
 		
-		return ResponseEntity.ok(entity2DTO(updatedLocation));
+		FullWeatherDTO updatedDto = entity2DTO(updatedLocation);
+		
+		return ResponseEntity.ok(addLinksByLocation(updatedDto, locationCode));
 	}
 
 
@@ -82,5 +94,12 @@ public class FullWeatherApiController {
 	
 	private Location dto2Entity(FullWeatherDTO dto) {
 		return modelMapper.map(dto, Location.class);
+	}
+	
+	private EntityModel<FullWeatherDTO> addLinksByLocation(FullWeatherDTO dto, String locationCode) {
+		return EntityModel.of(dto)
+				.add(linkTo(
+						methodOn(FullWeatherApiController.class).getFullWeatherByLocationCode(locationCode))
+							.withSelfRel());		
 	}
 }

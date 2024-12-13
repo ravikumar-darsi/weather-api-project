@@ -17,15 +17,12 @@ public class FullWeatherDTO {
 
 	private String location;
 	
-	@JsonProperty("realtime_weather")
 	@JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = RealtimeWeatherFieldFilter.class)
 	@Valid
 	private RealtimeWeatherDTO realtimeWeather  = new RealtimeWeatherDTO();
-	
 	@JsonProperty("hourly_forecast")
 	@Valid
 	private List<HourlyWeatherDTO> listHourlyWeather = new ArrayList<>();
-	
 	@JsonProperty("daily_forecast")
 	@Valid
 	private List<DailyWeatherDTO> listDailyWeather = new ArrayList<>();

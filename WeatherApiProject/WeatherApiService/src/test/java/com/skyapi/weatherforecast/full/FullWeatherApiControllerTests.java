@@ -1,7 +1,7 @@
 package com.skyapi.weatherforecast.full;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -33,10 +33,8 @@ import com.skyapi.weatherforecast.hourly.HourlyWeatherDTO;
 import com.skyapi.weatherforecast.location.LocationNotFoundException;
 import com.skyapi.weatherforecast.realtime.RealtimeWeatherDTO;
 
-@SuppressWarnings("removal")
 @WebMvcTest(FullWeatherApiController.class)
 public class FullWeatherApiControllerTests {
-
 	private static final String END_POINT_PATH = "/v1/full";
 	private static final String RESPONSE_CONTENT_TYPE = "application/hal+json";
 	private static final String REQUEST_CONTENT_TYPE = "application/json";	
@@ -44,7 +42,7 @@ public class FullWeatherApiControllerTests {
 	@Autowired private MockMvc mockMvc;	
 	@Autowired private ObjectMapper objectMapper;
 	
-	@MockBean private FullWeatherService  weatherService;
+	@MockBean private FullWeatherService weatherService;
 	@MockBean private GeolocationService locationService;
 	@SpyBean private FullWeatherModelAssembler modelAssembler;
 	
@@ -72,7 +70,7 @@ public class FullWeatherApiControllerTests {
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.errors[0]", is(ex.getMessage())))
 				.andDo(print());
-	}
+	}	
 	
 	@Test
 	public void testGetByIPShouldReturn200OK() throws Exception {
@@ -143,7 +141,7 @@ public class FullWeatherApiControllerTests {
 				.andExpect(jsonPath("$.daily_forecast[0].precipitation", is(40)))
 				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/full")))
 				.andDo(print());
-	}
+	}			
 	
 	@Test
 	public void testGetByCodeShouldReturn404NotFound() throws Exception {
@@ -159,7 +157,6 @@ public class FullWeatherApiControllerTests {
 				.andDo(print());		
 	}
 	
-
 	@Test
 	public void testGetByCodeShouldReturn200OK() throws Exception {
 		String locationCode = "NYC_USA";
@@ -231,7 +228,8 @@ public class FullWeatherApiControllerTests {
 				.andExpect(jsonPath("$.daily_forecast[0].precipitation", is(40)))
 				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/full/" + locationCode)))
 				.andDo(print());
-	}
+	}	
+	
 	
 	@Test
 	public void testUpdateShouldReturn400BadRequestBecauseNoHourlyWeather() throws Exception {
@@ -246,7 +244,7 @@ public class FullWeatherApiControllerTests {
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", is("Hourly weather data cannot be empty")))
 				.andDo(print());
-	}
+	}	
 	
 	@Test
 	public void testUpdateShouldReturn400BadRequestBecauseNoDailyWeather() throws Exception {
@@ -269,7 +267,7 @@ public class FullWeatherApiControllerTests {
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", is("Daily weather data cannot be empty")))
 				.andDo(print());
-	}
+	}	
 	
 	@Test
 	public void testUpdateShouldReturn400BadRequestBecauseInvalidRealtimeWeatherData() throws Exception {
@@ -308,11 +306,11 @@ public class FullWeatherApiControllerTests {
 		
 		String requestBody = objectMapper.writeValueAsString(fullWeatherDTO);
 		
-		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(requestBody))
+		mockMvc.perform(put(requestURI).contentType("application/json").content(requestBody))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", containsString("Temperature must be in the range")))
 				.andDo(print());
-	}
+	}		
 	
 	@Test
 	public void testUpdateShouldReturn400BadRequestBecauseInvalidHourlyWeatherData() throws Exception {
@@ -355,7 +353,7 @@ public class FullWeatherApiControllerTests {
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", containsString("Hour of day must be in between")))
 				.andDo(print());
-	}
+	}		
 	
 	@Test
 	public void testUpdateShouldReturn400BadRequestBecauseInvalidDailyWeatherData() throws Exception {
@@ -398,7 +396,7 @@ public class FullWeatherApiControllerTests {
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors[0]", containsString("Status must be in between")))
 				.andDo(print());
-	}
+	}	
 	
 	@Test
 	public void testUpdateShouldReturn404NotFound() throws Exception {
@@ -448,7 +446,7 @@ public class FullWeatherApiControllerTests {
 				.andExpect(jsonPath("$.errors[0]", is(ex.getMessage())))
 				.andDo(print());
 	}
-
+	
 	@Test
 	public void testUpdateShouldReturn200OK() throws Exception {
 		String locationCode = "NYC_USA";
@@ -534,6 +532,5 @@ public class FullWeatherApiControllerTests {
 				.andExpect(jsonPath("$.daily_forecast[0].precipitation", is(40)))
 				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/full/" + locationCode)))
 				.andDo(print());
-	}
-
+	}		
 }
