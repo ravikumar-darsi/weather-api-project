@@ -31,7 +31,8 @@ import com.skyapi.weatherforecast.location.LocationNotFoundException;
 public class RealtimeWeatherApiControllerTests {
 
 	private static final String END_POINT_PATH = "/v1/realtime";
-
+	private static final String RESPONSE_CONTENT_TYPE = "application/hal+json";
+	private static final String REQUEST_CONTENT_TYPE = "application/json";
 	@Autowired
 	MockMvc mockMvc;
 	@Autowired
@@ -97,9 +98,14 @@ public class RealtimeWeatherApiControllerTests {
 //				.andExpect(jsonPath("$.location", is(expectedLocation)))
 //				.andDo(print());
 
-		mockMvc.perform(MockMvcRequestBuilders.get(END_POINT_PATH)).andExpect(MockMvcResultMatchers.status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType("application/json"))
-				.andExpect(MockMvcResultMatchers.jsonPath("$.location", is(expectedLocation)))
+		mockMvc.perform(MockMvcRequestBuilders.get(END_POINT_PATH))
+				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.content().contentType(RESPONSE_CONTENT_TYPE))
+				.andExpect(jsonPath("$.location", is(expectedLocation)))
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/realtime")))
+				.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly")))
+				.andExpect(jsonPath("$._links.daily_forecast.href", is("http://localhost/v1/daily")))
+				.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full")))
 				.andDo(MockMvcResultHandlers.print());
 	}
 
@@ -146,8 +152,12 @@ public class RealtimeWeatherApiControllerTests {
 
 		mockMvc.perform(MockMvcRequestBuilders.get(requestURI))
 		        .andExpect(MockMvcResultMatchers.status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+				.andExpect(MockMvcResultMatchers.content().contentType(RESPONSE_CONTENT_TYPE))
 				.andExpect(MockMvcResultMatchers.jsonPath("$.location", is(expectedLocation)))
+				.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/realtime/" + locationCode)))
+				.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly/" + locationCode)))
+				.andExpect(jsonPath("$._links.daily_forecast.href", is("http://localhost/v1/daily/" + locationCode)))
+				.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full/" + locationCode)))
 				.andDo(MockMvcResultHandlers.print());
 	}
 	
@@ -165,7 +175,7 @@ public class RealtimeWeatherApiControllerTests {
 		
 		String bodyContent = mapper.writeValueAsString(dto);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(bodyContent))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(bodyContent))
 			.andExpect(status().isBadRequest())
 			.andDo(print());		
 	}
@@ -187,7 +197,7 @@ public class RealtimeWeatherApiControllerTests {
 		
 		String bodyContent = mapper.writeValueAsString(dto);
 		
-		mockMvc.perform(put(requestURI).contentType("application/json").content(bodyContent))
+		mockMvc.perform(put(requestURI).contentType(REQUEST_CONTENT_TYPE).content(bodyContent))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.errors[0]", is(ex.getMessage())))
 			.andDo(print());		
@@ -230,9 +240,14 @@ public class RealtimeWeatherApiControllerTests {
 		String expectedLocation = location.getCityName() + ", " + location.getRegionName() + ", " + location.getCountryName();
 		
 		mockMvc.perform(put(requestURI).contentType("application/json").content(bodyContent))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.location", is(expectedLocation)))
-			.andDo(print());		
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.location", is(expectedLocation)))
+		.andExpect(MockMvcResultMatchers.content().contentType(RESPONSE_CONTENT_TYPE))			
+		.andExpect(jsonPath("$._links.self.href", is("http://localhost/v1/realtime/" + locationCode)))
+		.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly/" + locationCode)))
+		.andExpect(jsonPath("$._links.daily_forecast.href", is("http://localhost/v1/daily/" + locationCode)))
+		.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full/" + locationCode)))			
+		.andDo(print());		
 	}
 	
 

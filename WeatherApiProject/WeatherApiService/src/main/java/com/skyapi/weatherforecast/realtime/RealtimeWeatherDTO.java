@@ -4,16 +4,16 @@ import java.util.Date;
 
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
+import org.springframework.hateoas.RepresentationModel;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import jakarta.validation.constraints.NotBlank;
 
 @JsonPropertyOrder({"location", "temperature", "humidity", "precipitation", "wind_speed", "status", "last_updated"})
-public class RealtimeWeatherDTO {
+public class RealtimeWeatherDTO  extends RepresentationModel<RealtimeWeatherDTO>  {
 	
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private String location;
@@ -27,7 +27,6 @@ public class RealtimeWeatherDTO {
 	@Range(min = 0, max = 100, message = "Precipitation must be in the range of 0 to 100 percentage")
 	private int precipitation;
 	
-	@JsonProperty("wind_speed")
 	@Range(min = 0, max = 200, message = "Wind speed must be in the range of 0 to 200 km/h")
 	private int windSpeed;
 	
@@ -35,7 +34,6 @@ public class RealtimeWeatherDTO {
 	@Length(min = 3, max = 50, message = "Status must be in between 3-50 characters")	
 	private String status;
 	
-	@JsonProperty("last_updated")
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
 	private Date lastUpdated;
 	
