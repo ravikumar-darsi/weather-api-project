@@ -44,6 +44,8 @@ import com.skyapi.weatherforecast.common.Location;
 public class LocationApiControllerTests {
 
 	private static final String END_POINT_PATH = "/v1/locations";
+	private static final String RESPONSE_CONTENT_TYPE = "application/hal+json";
+	private static final String REQUEST_CONTENT_TYPE = "application/json";	
 
 	@Autowired
 	MockMvc mockMvc;
@@ -58,14 +60,15 @@ public class LocationApiControllerTests {
 
 		String bodyContent = mapper.writeValueAsString(location);
 
-		mockMvc.perform(post(END_POINT_PATH).contentType("application/json").content(bodyContent))
+		mockMvc.perform(post(END_POINT_PATH).contentType(REQUEST_CONTENT_TYPE).content(bodyContent))
 				.andExpect(status().isBadRequest()).andDo(print());
 	}
 
 	@Test
 	public void testAddShouldReturn201Created() throws Exception {
+		String code = "NYC_USA";
 		Location location = new Location();
-		location.setCode("NYC_USA");
+		location.setCode(code);
 		location.setCityName("New York City");
 		location.setRegionName("New York");
 		location.setCountryCode("US");
@@ -84,10 +87,18 @@ public class LocationApiControllerTests {
 
 		String bodyContent = mapper.writeValueAsString(dto);
 
-		mockMvc.perform(post(END_POINT_PATH).contentType("application/json").content(bodyContent))
-				.andExpect(status().isCreated()).andExpect(content().contentType("application/json"))
-				.andExpect(jsonPath("$.code", is("NYC_USA"))).andExpect(jsonPath("$.city_name", is("New York City")))
-				.andExpect(header().string("Location", "/v1/locations/NYC_USA")).andDo(print());
+		mockMvc.perform(post(END_POINT_PATH).contentType(REQUEST_CONTENT_TYPE).content(bodyContent))
+		.andExpect(status().isCreated())
+		.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
+		.andExpect(jsonPath("$.code", is(code)))
+		.andExpect(jsonPath("$.city_name", is("New York City")))
+		.andExpect(header().string("Location", END_POINT_PATH + "/" + code))
+		.andExpect(jsonPath("$._links.self.href", is("http://localhost" + END_POINT_PATH + "/" + code)))
+		.andExpect(jsonPath("$._links.realtime_weather.href", is("http://localhost/v1/realtime/" + code)))
+		.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly/" + code)))
+		.andExpect(jsonPath("$._links.daily_forecast.href", is("http://localhost/v1/daily/" + code)))
+		.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full/" + code)))			
+		.andDo(print());
 	}
 
 	@Test
@@ -490,9 +501,17 @@ public class LocationApiControllerTests {
 
 		Mockito.when(service.get(code)).thenReturn(location);
 
-		mockMvc.perform(get(requestURI)).andExpect(status().isOk()).andExpect(content().contentType("application/json"))
-				.andExpect(jsonPath("$.code", is(code))).andExpect(jsonPath("$.city_name", is("Los Angeles")))
-				.andDo(print());
+		mockMvc.perform(get(requestURI))
+		.andExpect(status().isOk())
+		.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
+		.andExpect(jsonPath("$.code", is(code)))
+		.andExpect(jsonPath("$.city_name", is("Los Angeles")))
+		.andExpect(jsonPath("$._links.self.href", is("http://localhost" + END_POINT_PATH + "/" + code)))
+		.andExpect(jsonPath("$._links.realtime_weather.href", is("http://localhost/v1/realtime/" + code)))
+		.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly/" + code)))
+		.andExpect(jsonPath("$._links.daily_forecast.href", is("http://localhost/v1/daily/" + code)))
+		.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full/" + code)))
+		.andDo(print());
 	}
 
 	@Test
@@ -534,8 +553,9 @@ public class LocationApiControllerTests {
 
 	@Test
 	public void testUpdateShouldReturn200OK() throws Exception {
+		String code = "NYC_USA";
 		Location location = new Location();
-		location.setCode("NYC_USA");
+		location.setCode(code);
 		location.setCityName("New York City");
 		location.setRegionName("New York");
 		location.setCountryCode("US");
@@ -554,10 +574,17 @@ public class LocationApiControllerTests {
 
 		String bodyContent = mapper.writeValueAsString(dto);
 
-		mockMvc.perform(put(END_POINT_PATH).contentType("application/json").content(bodyContent))
-				.andExpect(status().isOk()).andExpect(content().contentType("application/json"))
-				.andExpect(jsonPath("$.code", is("NYC_USA"))).andExpect(jsonPath("$.city_name", is("New York City")))
-				.andDo(print());
+		mockMvc.perform(put(END_POINT_PATH).contentType(REQUEST_CONTENT_TYPE).content(bodyContent))
+		.andExpect(status().isOk())
+		.andExpect(content().contentType(RESPONSE_CONTENT_TYPE))
+		.andExpect(jsonPath("$.code", is("NYC_USA")))
+		.andExpect(jsonPath("$.city_name", is("New York City")))
+		.andExpect(jsonPath("$._links.self.href", is("http://localhost" + END_POINT_PATH + "/" + code)))
+		.andExpect(jsonPath("$._links.realtime_weather.href", is("http://localhost/v1/realtime/" + code)))
+		.andExpect(jsonPath("$._links.hourly_forecast.href", is("http://localhost/v1/hourly/" + code)))
+		.andExpect(jsonPath("$._links.daily_forecast.href", is("http://localhost/v1/daily/" + code)))
+		.andExpect(jsonPath("$._links.full_forecast.href", is("http://localhost/v1/full/" + code)))			
+		.andDo(print());
 	}
 
 	@Test

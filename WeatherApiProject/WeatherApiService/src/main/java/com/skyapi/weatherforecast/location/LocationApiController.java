@@ -28,6 +28,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.skyapi.weatherforecast.BadRequestException;
 import com.skyapi.weatherforecast.common.Location;
+import com.skyapi.weatherforecast.daily.DailyWeatherApiController;
+import com.skyapi.weatherforecast.full.FullWeatherApiController;
+import com.skyapi.weatherforecast.hourly.HourlyWeatherApiController;
+import com.skyapi.weatherforecast.realtime.RealtimeWeatherApiController;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -42,8 +46,14 @@ public class LocationApiController {
 	private LocationService service;
 	private ModelMapper modelMapper;
 
-	private Map<String, String> propertyMap = Map.of("code", "code", "city_name", "cityName", "region_name",
-			"regionName", "country_code", "countryCode", "country_Name", "countryName", "enabled", "enabled");
+	private Map<String, String> propertyMap = Map.of(
+				"code", "code", 
+				"city_name", "cityName", 
+				"region_name","regionName", 
+				"country_code", "countryCode", 
+				"country_Name", "countryName",
+				"enabled", "enabled"
+				);
 
 	public LocationApiController(LocationService service, ModelMapper modelMapper) {
 		super();
@@ -56,7 +66,7 @@ public class LocationApiController {
 		Location addedLocation = service.add(dto2Entity(dto));
 		URI uri = URI.create("/v1/locations/" + addedLocation.getCode());
 
-		return ResponseEntity.created(uri).body(entity2DTO(addedLocation));
+		return ResponseEntity.created(uri).body(addLinks2Item(entity2DTO(addedLocation)));
 	}
 
 	@Deprecated
@@ -183,7 +193,7 @@ public class LocationApiController {
 	public ResponseEntity<?> getLocation(@PathVariable("code") String code) {
 		Location location = service.get(code);
 
-		return ResponseEntity.ok(entity2DTO(location));
+		return ResponseEntity.ok(addLinks2Item(entity2DTO(location)));
 	}
 
 	@PutMapping
@@ -191,7 +201,7 @@ public class LocationApiController {
 
 		Location updatedLocation = service.update(dto2Entity(dto));
 
-		return ResponseEntity.ok(entity2DTO(updatedLocation));
+		return ResponseEntity.ok(addLinks2Item(entity2DTO(updatedLocation)));
 
 	}
 
@@ -216,6 +226,31 @@ public class LocationApiController {
 
 	private Location dto2Entity(LocationDTO dto) {
 		return modelMapper.map(dto, Location.class);
+	}
+	
+	private LocationDTO addLinks2Item(LocationDTO dto) {
+		
+		dto.add(linkTo(
+				methodOn(LocationApiController.class).getLocation(dto.getCode()))
+					.withSelfRel());	
+		
+		dto.add(linkTo(
+				methodOn(RealtimeWeatherApiController.class).getRealtimeWeatherByLocationCode(dto.getCode()))
+					.withRel("realtime_weather"));	
+		
+		dto.add(linkTo(
+				methodOn(HourlyWeatherApiController.class).listHourlyForecastByLocationCode(dto.getCode(), null))
+					.withRel("hourly_forecast"));
+		
+		dto.add(linkTo(
+				methodOn(DailyWeatherApiController.class).listDailyForecastByLocationCode(dto.getCode()))
+					.withRel("daily_forecast"));
+		
+		dto.add(linkTo(
+				methodOn(FullWeatherApiController.class).getFullWeatherByLocationCode(dto.getCode()))
+					.withRel("full_forecast"));		
+		
+		return dto;
 	}
 
 }
