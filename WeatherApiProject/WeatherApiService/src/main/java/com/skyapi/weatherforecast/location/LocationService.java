@@ -1,6 +1,7 @@
 package com.skyapi.weatherforecast.location;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,11 +33,19 @@ public class LocationService extends AbstractLocationService {
 		return repo.findUntrashed();
 	}
 
+	@Deprecated
 	public Page<Location> listByPage(int pageNum, int pageSize, String sortField) {
 		Sort sort = Sort.by(sortField).ascending();
 		Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
-
+		
 		return repo.findUntrashed(pageable);
+	}
+	
+	public Page<Location> listByPage(int pageNum, int pageSize, String sortField, Map<String, Object> filterFields) {
+		Sort sort = Sort.by(sortField).ascending();
+		Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
+		
+		return repo.listWithFilter(pageable, filterFields);
 	}
 
 	public Location get(String code) {
@@ -72,6 +81,5 @@ public class LocationService extends AbstractLocationService {
 
 		repo.trashByCode(code);
 	}
-	
-	
+		
 }

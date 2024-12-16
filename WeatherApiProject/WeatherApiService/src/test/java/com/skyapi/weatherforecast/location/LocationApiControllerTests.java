@@ -14,6 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyMap;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -181,7 +185,7 @@ public class LocationApiControllerTests {
 	@Test
 	public void testListByPageShouldReturn204NoContent() throws Exception {
 		
-		Mockito.when(service.listByPage(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyString()))
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap()))
 						.thenReturn(Page.empty());
 		
 		mockMvc.perform(get(END_POINT_PATH))
@@ -219,8 +223,8 @@ public class LocationApiControllerTests {
 		
 		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
 		
-		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField))
-					.thenReturn(page);
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap()))
+		.thenReturn(page);
 		
 		String requestURI= END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
 
@@ -256,20 +260,20 @@ public class LocationApiControllerTests {
 		
 		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
 		
-		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField)).thenReturn(page);
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap())).thenReturn(page);
 		
 		String hostName = "http://localhost";
 		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
 		
 		mockMvc.perform(get(requestURI))
-			.andExpect(status().isOk())
-			.andExpect(content().contentType("application/hal+json"))
-			.andExpect(jsonPath("$._links.self.href", is(hostName + requestURI)))
-			.andExpect(jsonPath("$._links.first").doesNotExist())
-			.andExpect(jsonPath("$._links.next").doesNotExist())
-			.andExpect(jsonPath("$._links.prev").doesNotExist())
-			.andExpect(jsonPath("$._links.last").doesNotExist())
-			.andDo(print());			
+		.andExpect(status().isOk())
+		.andExpect(content().contentType("application/hal+json"))
+		.andExpect(jsonPath("$._links.self.href", containsString(hostName + requestURI)))
+		.andExpect(jsonPath("$._links.first").doesNotExist())
+		.andExpect(jsonPath("$._links.next").doesNotExist())
+		.andExpect(jsonPath("$._links.prev").doesNotExist())
+		.andExpect(jsonPath("$._links.last").doesNotExist())
+		.andDo(print());			
 	}		
 	
 	@Test
@@ -292,7 +296,7 @@ public class LocationApiControllerTests {
 		
 		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
 		
-		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField)).thenReturn(page);
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap())).thenReturn(page);
 		
 		String hostName = "http://localhost";
 		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
@@ -304,9 +308,9 @@ public class LocationApiControllerTests {
 			.andExpect(status().isOk())
 			.andExpect(content().contentType("application/hal+json"))
 			.andExpect(jsonPath("$._links.first").doesNotExist())
-			.andExpect(jsonPath("$._links.next.href", is(hostName + nextPageURI)))
+			.andExpect(jsonPath("$._links.next.href", containsString(hostName + nextPageURI)))
 			.andExpect(jsonPath("$._links.prev").doesNotExist())
-			.andExpect(jsonPath("$._links.last.href", is(hostName + lastPageURI)))
+			.andExpect(jsonPath("$._links.last.href", containsString(hostName + lastPageURI)))
 			.andDo(print());			
 	}	
 	
@@ -330,7 +334,7 @@ public class LocationApiControllerTests {
 		
 		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
 		
-		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField)).thenReturn(page);
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap())).thenReturn(page);
 		
 		String hostName = "http://localhost";
 		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
@@ -341,13 +345,13 @@ public class LocationApiControllerTests {
 		String lastPageURI = END_POINT_PATH + "?page=" + totalPages + "&size=" + pageSize + "&sort=" + sortField;
 		
 		mockMvc.perform(get(requestURI))
-			.andExpect(status().isOk())
-			.andExpect(content().contentType("application/hal+json"))
-			.andExpect(jsonPath("$._links.first.href", is(hostName + firstPageURI)))
-			.andExpect(jsonPath("$._links.next.href", is(hostName + nextPageURI)))
-			.andExpect(jsonPath("$._links.prev.href", is(hostName + prevPageURI)))
-			.andExpect(jsonPath("$._links.last.href", is(hostName + lastPageURI)))
-			.andDo(print());			
+		.andExpect(status().isOk())
+		.andExpect(content().contentType("application/hal+json"))
+		.andExpect(jsonPath("$._links.first.href", containsString(hostName + firstPageURI)))
+		.andExpect(jsonPath("$._links.next.href", containsString(hostName + nextPageURI)))
+		.andExpect(jsonPath("$._links.prev.href", containsString(hostName + prevPageURI)))
+		.andExpect(jsonPath("$._links.last.href", containsString(hostName + lastPageURI)))
+		.andDo(print());			
 	}		
 
 	@Test
@@ -370,7 +374,7 @@ public class LocationApiControllerTests {
 		
 		Page<Location> page = new PageImpl<>(listLocations, pageable, totalElements);
 		
-		Mockito.when(service.listByPage(pageNum - 1, pageSize, sortField)).thenReturn(page);
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap())).thenReturn(page);
 		
 		String hostName = "http://localhost";
 		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
@@ -394,15 +398,15 @@ public class LocationApiControllerTests {
 		int pageSize = 5;
 		String sortField = "code";
 		
-		Mockito.when(service.listByPage(pageNum, pageSize, sortField))
-						.thenReturn(Page.empty());
-		
-		String requestURI= END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
-		
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap()))
+		.thenReturn(Page.empty());
+
+		String requestURI = END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
+
 		mockMvc.perform(get(requestURI))
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.errors[0]", containsString("must be greater than or equal to 1")))
-				.andDo(print());
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errors[0]", containsString("must be greater than or equal to 1")))
+			.andDo(print());
 		
 	}
 	
@@ -412,8 +416,8 @@ public class LocationApiControllerTests {
 		int pageSize = 3;
 		String sortField = "code";
 		
-		Mockito.when(service.listByPage(pageNum, pageSize, sortField))
-						.thenReturn(Page.empty());
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap()))
+		.thenReturn(Page.empty());
 		
 		String requestURI= END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
 		
@@ -430,8 +434,8 @@ public class LocationApiControllerTests {
 		int pageSize = 5;
 		String sortField = "code_abc";
 		
-		Mockito.when(service.listByPage(pageNum, pageSize, sortField))
-						.thenReturn(Page.empty());
+		Mockito.when(service.listByPage(anyInt(), anyInt(), anyString(), anyMap()))
+				.thenReturn(Page.empty());
 		
 		String requestURI= END_POINT_PATH + "?page=" + pageNum + "&size=" + pageSize + "&sort=" + sortField;
 		

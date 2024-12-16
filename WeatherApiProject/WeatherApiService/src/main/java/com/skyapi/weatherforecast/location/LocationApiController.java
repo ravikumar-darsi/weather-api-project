@@ -3,6 +3,7 @@ package com.skyapi.weatherforecast.location;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,29 +73,61 @@ public class LocationApiController {
 
 	@GetMapping
 	public ResponseEntity<?> listLocations(
-			@RequestParam(value = "page", required = false, defaultValue = "1") @Min(value = 1) Integer pageNum,
-			@RequestParam(value = "size", required = false, defaultValue = "5") @Min(value = 5) @Max(value = 20) Integer pageSize,
-			@RequestParam(value = "sort", required = false, defaultValue = "code") String sortField)
-			throws BadRequestException {
-
+			@RequestParam(value = "page", required = false, defaultValue = "1") 
+								@Min(value = 1)	Integer pageNum,
+								
+			@RequestParam(value = "size", required = false, defaultValue = "5") 
+								@Min(value = 5) @Max(value = 20) Integer pageSize,
+								
+			@RequestParam(value = "sort", required = false, defaultValue = "code") String sortField,
+			
+			@RequestParam(value = "enabled", required = false, defaultValue = "") String enabled,
+			
+			@RequestParam(value = "region_name", required = false, defaultValue = "") String regionName,
+			
+			@RequestParam(value = "country_code", required = false, defaultValue = "") String countryCode
+			
+			) throws BadRequestException {
+		
 		if (!propertyMap.containsKey(sortField)) {
 			throw new BadRequestException("invalid sort field: " + sortField);
 		}
-
-		Page<Location> page = service.listByPage(pageNum - 1, pageSize, propertyMap.get(sortField));
-
+		
+		Map<String, Object> filterFields = new HashMap<>();
+		
+		if (!"".equals(enabled)) {
+			filterFields.put("enabled", Boolean.parseBoolean(enabled));
+		}
+		
+		if (!"".equals(regionName)) {
+			filterFields.put("regionName", regionName);
+		}		
+		
+		if (!"".equals(countryCode)) {
+			filterFields.put("countryCode", countryCode);
+		}		
+		
+		Page<Location> page = service.listByPage(pageNum - 1, pageSize, propertyMap.get(sortField), filterFields);
+		
 		List<Location> locations = page.getContent();
-
+		
 		if (locations.isEmpty()) {
 			return ResponseEntity.noContent().build();
 		}
-
-		return ResponseEntity.ok(addPageMetadataAndLinks2Collection(listEntity2ListDTO(locations), page, sortField));		
+		
+		return ResponseEntity.ok(addPageMetadataAndLinks2Collection(
+				listEntity2ListDTO(locations), page, sortField, enabled, regionName, countryCode));		
 	}
 
 	private CollectionModel<LocationDTO> addPageMetadataAndLinks2Collection(
-			List<LocationDTO> listDTO, Page<Location> pageInfo, String sortField) throws BadRequestException {
+			List<LocationDTO> listDTO, Page<Location> pageInfo, String sortField,
+			String enabled, String regionName, String countryCode) throws BadRequestException {
 		
+		String actualEnabled = "".equals(enabled) ? null : enabled;
+		String actualRegionName = "".equals(regionName) ? null : regionName;
+		String actualCountryCode = "".equals(countryCode) ? null : countryCode;
+		
+				 
 		// add self link to each individual item
 		for (LocationDTO dto : listDTO) {
 			dto.add(linkTo(methodOn(LocationApiController.class).getLocation(dto.getCode())).withSelfRel());
@@ -110,32 +143,37 @@ public class LocationApiController {
 		CollectionModel<LocationDTO> collectionModel = PagedModel.of(listDTO, pageMetadata);
 		
 		// add self link to collection
-		collectionModel.add(linkTo(methodOn(LocationApiController.class).listLocations(pageNum, pageSize, sortField)).withSelfRel());
+		collectionModel.add(linkTo(methodOn(LocationApiController.class)
+								.listLocations(pageNum, pageSize, sortField, actualEnabled, actualRegionName, actualCountryCode))
+									.withSelfRel());
 		
 		if (pageNum > 1) {
-			// adding link to first page if the current page is not the first one
+			// add link to first page if the current page is not the first one
 			collectionModel.add(
-					linkTo(methodOn(LocationApiController.class).listLocations(1, pageSize, sortField))
-						.withRel(IanaLinkRelations.FIRST));
+					linkTo(methodOn(LocationApiController.class)
+							.listLocations(1, pageSize, sortField, actualEnabled, actualRegionName, actualCountryCode))
+								.withRel(IanaLinkRelations.FIRST));
 			
-			// adding link to the previous page if the current page is not the first one
+			// add link to the previous page if the current page is not the first one
 			collectionModel.add(
-					linkTo(methodOn(LocationApiController.class).listLocations(pageNum - 1, pageSize, sortField))
-						.withRel(IanaLinkRelations.PREV));			
-		}
+					linkTo(methodOn(LocationApiController.class)
+							.listLocations(pageNum - 1, pageSize, sortField, actualEnabled, actualRegionName, actualCountryCode))
+								.withRel(IanaLinkRelations.PREV));			
+		}	
 		
 		if (pageNum < totalPages) {
-			// adding link to next page if the current page is not the last one
+			// add link to next page if the current page is not the last one
 			collectionModel.add(
-					linkTo(methodOn(LocationApiController.class).listLocations(pageNum + 1, pageSize, sortField))
-						.withRel(IanaLinkRelations.NEXT));			
+					linkTo(methodOn(LocationApiController.class)
+							.listLocations(pageNum + 1, pageSize, sortField, actualEnabled, actualRegionName, actualCountryCode))
+								.withRel(IanaLinkRelations.NEXT));			
 			
 			// add link to last page if the current page is not the last one
 			collectionModel.add(
-					linkTo(methodOn(LocationApiController.class).listLocations(totalPages, pageSize, sortField))
-						.withRel(IanaLinkRelations.LAST));					
+					linkTo(methodOn(LocationApiController.class)
+							.listLocations(totalPages, pageSize, sortField, actualEnabled, actualRegionName, actualCountryCode))
+								.withRel(IanaLinkRelations.LAST));					
 		}
-		
 		
 		return collectionModel;
 		
