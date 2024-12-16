@@ -63,6 +63,11 @@ public class Location {
 		this(cityName, regionName, countryName, countryCode);
 		this.code = code;
 	}
+	
+	public Location(String code, String cityName, String regionName, String countryName, String countryCode, boolean enabled) {
+		this(code, cityName, regionName, countryName, countryCode);
+		this.enabled = enabled;
+	}
 
 	public String getCode() {
 		return code;

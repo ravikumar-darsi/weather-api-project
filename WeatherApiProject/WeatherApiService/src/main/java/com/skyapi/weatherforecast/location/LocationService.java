@@ -42,35 +42,37 @@ public class LocationService extends AbstractLocationService {
 	}
 	
 	public Page<Location> listByPage(int pageNum, int pageSize, String sortOption, Map<String, Object> filterFields) {
+		Sort sort = createMultipleSorts(sortOption);
+		
+		Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
+		
+		return repo.listWithFilter(pageable, filterFields);
+	}
+	
+	private Sort createMultipleSorts(String sortOption) {
 		String[] sortFields = sortOption.split(",");
 		
 		Sort sort = null;
 		
 		if (sortFields.length > 1) { // sorted by multiple fields
 			
-			String firstFieldName = sortFields[0];
-			String actualFirstFieldName = firstFieldName.replace("-", "");
-			
-			sort = firstFieldName.startsWith("-") ? 
-						Sort.by(actualFirstFieldName).descending() : Sort.by(actualFirstFieldName).ascending();
+			sort = createSingleSort(sortFields[0]);
 			
 			for (int i = 1; i < sortFields.length; i++) {
-				String nextFieldName = sortFields[i];
-				String actualNextFieldName = nextFieldName.replace("-", "");
 				
-				sort = sort.and(nextFieldName.startsWith("-") ? 
-							Sort.by(actualNextFieldName).descending() : Sort.by(actualNextFieldName).ascending());
+				sort = sort.and(createSingleSort(sortFields[i]));
 			}
 			
 		} else { // sorted by a single field
-			String actualFieldName = sortOption.replace("-", "");
-			sort = sortOption.startsWith("-")
-						? Sort.by(actualFieldName).descending() : Sort.by(actualFieldName).ascending();
+			sort = createSingleSort(sortOption);
 		}
-		
-		Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
-		
-		return repo.listWithFilter(pageable, filterFields);
+		return sort;
+	}	
+	
+	private Sort createSingleSort(String fieldName) {
+		String actualFieldName = fieldName.replace("-", "");
+		return fieldName.startsWith("-")
+					? Sort.by(actualFieldName).descending() : Sort.by(actualFieldName).ascending();		
 	}
 
 	public Location get(String code) {

@@ -99,31 +99,23 @@ public class LocationApiController {
 			
 			) throws BadRequestException {
 		
-		String[] sortFields = sortOption.split(",");
+		sortOption = validateSortOption(sortOption);
 		
+		Map<String, Object> filterFields = getFilterFields(enabled, regionName, countryCode);		
 		
-		if (sortFields.length > 1) { // sorted by multiple fields
-			
-			for (int i = 0; i < sortFields.length; i++) {
-				String actualFieldName = sortFields[i].replace("-", "");
-				
-				if (!propertyMap.containsKey(actualFieldName)) {
-					throw new BadRequestException("invalid sort field: " + actualFieldName);
-				}
-				
-				sortOption = sortOption.replace(actualFieldName, propertyMap.get(actualFieldName));
-			}
-			
-		} else { // sorted by a single field
-			String actualFieldName = sortOption.replace("-", "");
-			if (!propertyMap.containsKey(actualFieldName)) {
-				throw new BadRequestException("invalid sort field: " + actualFieldName);
-			}
-			
-			sortOption = sortOption.replace(actualFieldName, propertyMap.get(actualFieldName));
-
+		Page<Location> page = service.listByPage(pageNum - 1, pageSize, sortOption, filterFields);
+		
+		List<Location> locations = page.getContent();
+		
+		if (locations.isEmpty()) {
+			return ResponseEntity.noContent().build();
 		}
-				
+		
+		return ResponseEntity.ok(addPageMetadataAndLinks2Collection(
+				listEntity2ListDTO(locations), page, sortOption, enabled, regionName, countryCode));		
+	}
+
+	private Map<String, Object> getFilterFields(String enabled, String regionName, String countryCode) {
 		Map<String, Object> filterFields = new HashMap<>();
 		
 		if (!"".equals(enabled)) {
@@ -136,18 +128,37 @@ public class LocationApiController {
 		
 		if (!"".equals(countryCode)) {
 			filterFields.put("countryCode", countryCode);
-		}		
-		
-		Page<Location> page = service.listByPage(pageNum - 1, pageSize, sortOption, filterFields);
-		
-		List<Location> locations = page.getContent();
-		
-		if (locations.isEmpty()) {
-			return ResponseEntity.noContent().build();
 		}
+		return filterFields;
+	}
+
+	private String validateSortOption(String sortOption) throws BadRequestException {
+		String translatedSortOption = sortOption;
 		
-		return ResponseEntity.ok(addPageMetadataAndLinks2Collection(
-				listEntity2ListDTO(locations), page, sortOption, enabled, regionName, countryCode));		
+		String[] sortFields = sortOption.split(",");
+		
+		
+		if (sortFields.length > 1) { // sorted by multiple fields
+			
+			for (int i = 0; i < sortFields.length; i++) {
+				String actualFieldName = sortFields[i].replace("-", "");
+				
+				if (!propertyMap.containsKey(actualFieldName)) {
+					throw new BadRequestException("invalid sort field: " + actualFieldName);
+				}
+				
+				translatedSortOption = translatedSortOption.replace(actualFieldName, propertyMap.get(actualFieldName));
+			}
+			
+		} else { // sorted by a single field
+			String actualFieldName = sortOption.replace("-", "");
+			if (!propertyMap.containsKey(actualFieldName)) {
+				throw new BadRequestException("invalid sort field: " + actualFieldName);
+			}
+			
+			translatedSortOption = translatedSortOption.replace(actualFieldName, propertyMap.get(actualFieldName));
+		}
+		return translatedSortOption;
 	}
 
 	private CollectionModel<LocationDTO> addPageMetadataAndLinks2Collection(

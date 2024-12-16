@@ -33,6 +33,10 @@ public class FilterableLocationRepositoryImpl implements FilterableLocationRepos
 		CriteriaQuery<Location> entityQuery = builder.createQuery(Location.class);
 		
 		Root<Location> entityRoot = entityQuery.from(Location.class);
+		entityQuery.select(builder.construct(Location.class, 
+				entityRoot.get("code"), entityRoot.get("cityName"),
+				entityRoot.get("regionName"), entityRoot.get("countryName"),
+				entityRoot.get("countryCode"), entityRoot.get("enabled")));
 		
 		Predicate[] predicates = createPredicates(filterFields, builder, entityRoot);
 		
