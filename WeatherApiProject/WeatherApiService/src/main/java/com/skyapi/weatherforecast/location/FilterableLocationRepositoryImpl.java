@@ -42,7 +42,11 @@ public class FilterableLocationRepositoryImpl implements FilterableLocationRepos
 		
 		pageable.getSort().stream().forEach(order -> {
 			System.out.println("Order field: " + order.getProperty());
-			listOrder.add(builder.asc(entityRoot.get(order.getProperty())));
+			if (order.isAscending()) {
+				listOrder.add(builder.asc(entityRoot.get(order.getProperty())));
+			} else {
+				listOrder.add(builder.desc(entityRoot.get(order.getProperty())));
+			}
 		});
 		
 		entityQuery.orderBy(listOrder);

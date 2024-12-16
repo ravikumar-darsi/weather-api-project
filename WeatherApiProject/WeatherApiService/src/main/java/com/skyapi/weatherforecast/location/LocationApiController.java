@@ -89,7 +89,7 @@ public class LocationApiController {
 			@RequestParam(value = "size", required = false, defaultValue = "5") 
 								@Min(value = 5) @Max(value = 20) Integer pageSize,
 								
-			@RequestParam(value = "sort", required = false, defaultValue = "code") String sortField,
+			@RequestParam(value = "sort", required = false, defaultValue = "code") String sortOption,
 			
 			@RequestParam(value = "enabled", required = false, defaultValue = "") String enabled,
 			
@@ -99,10 +99,31 @@ public class LocationApiController {
 			
 			) throws BadRequestException {
 		
-		if (!propertyMap.containsKey(sortField)) {
-			throw new BadRequestException("invalid sort field: " + sortField);
-		}
+		String[] sortFields = sortOption.split(",");
 		
+		
+		if (sortFields.length > 1) { // sorted by multiple fields
+			
+			for (int i = 0; i < sortFields.length; i++) {
+				String actualFieldName = sortFields[i].replace("-", "");
+				
+				if (!propertyMap.containsKey(actualFieldName)) {
+					throw new BadRequestException("invalid sort field: " + actualFieldName);
+				}
+				
+				sortOption = sortOption.replace(actualFieldName, propertyMap.get(actualFieldName));
+			}
+			
+		} else { // sorted by a single field
+			String actualFieldName = sortOption.replace("-", "");
+			if (!propertyMap.containsKey(actualFieldName)) {
+				throw new BadRequestException("invalid sort field: " + actualFieldName);
+			}
+			
+			sortOption = sortOption.replace(actualFieldName, propertyMap.get(actualFieldName));
+
+		}
+				
 		Map<String, Object> filterFields = new HashMap<>();
 		
 		if (!"".equals(enabled)) {
@@ -117,7 +138,7 @@ public class LocationApiController {
 			filterFields.put("countryCode", countryCode);
 		}		
 		
-		Page<Location> page = service.listByPage(pageNum - 1, pageSize, propertyMap.get(sortField), filterFields);
+		Page<Location> page = service.listByPage(pageNum - 1, pageSize, sortOption, filterFields);
 		
 		List<Location> locations = page.getContent();
 		
@@ -126,7 +147,7 @@ public class LocationApiController {
 		}
 		
 		return ResponseEntity.ok(addPageMetadataAndLinks2Collection(
-				listEntity2ListDTO(locations), page, sortField, enabled, regionName, countryCode));		
+				listEntity2ListDTO(locations), page, sortOption, enabled, regionName, countryCode));		
 	}
 
 	private CollectionModel<LocationDTO> addPageMetadataAndLinks2Collection(

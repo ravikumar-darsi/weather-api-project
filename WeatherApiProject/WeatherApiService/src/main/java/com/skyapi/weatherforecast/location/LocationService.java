@@ -41,8 +41,33 @@ public class LocationService extends AbstractLocationService {
 		return repo.findUntrashed(pageable);
 	}
 	
-	public Page<Location> listByPage(int pageNum, int pageSize, String sortField, Map<String, Object> filterFields) {
-		Sort sort = Sort.by(sortField).ascending();
+	public Page<Location> listByPage(int pageNum, int pageSize, String sortOption, Map<String, Object> filterFields) {
+		String[] sortFields = sortOption.split(",");
+		
+		Sort sort = null;
+		
+		if (sortFields.length > 1) { // sorted by multiple fields
+			
+			String firstFieldName = sortFields[0];
+			String actualFirstFieldName = firstFieldName.replace("-", "");
+			
+			sort = firstFieldName.startsWith("-") ? 
+						Sort.by(actualFirstFieldName).descending() : Sort.by(actualFirstFieldName).ascending();
+			
+			for (int i = 1; i < sortFields.length; i++) {
+				String nextFieldName = sortFields[i];
+				String actualNextFieldName = nextFieldName.replace("-", "");
+				
+				sort = sort.and(nextFieldName.startsWith("-") ? 
+							Sort.by(actualNextFieldName).descending() : Sort.by(actualNextFieldName).ascending());
+			}
+			
+		} else { // sorted by a single field
+			String actualFieldName = sortOption.replace("-", "");
+			sort = sortOption.startsWith("-")
+						? Sort.by(actualFieldName).descending() : Sort.by(actualFieldName).ascending();
+		}
+		
 		Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
 		
 		return repo.listWithFilter(pageable, filterFields);
